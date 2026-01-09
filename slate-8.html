@@ -1,0 +1,1953 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slate - Daily Word Challenge</title>
+    <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Permanent+Marker&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Roboto Mono', monospace;
+            background: #1a3a2a;
+            background-image: 
+                radial-gradient(circle at 20% 30%, rgba(100,180,100,0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(80,140,100,0.08) 0%, transparent 50%),
+                linear-gradient(135deg, #1a3a2a 0%, #2a4a3a 50%, #1a3a2a 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            color: #e8e6e3;
+        }
+
+        /* Chalkboard texture overlay */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image: 
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px),
+                repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(255,255,255,0.03) 2px, rgba(255,255,255,0.03) 4px);
+            pointer-events: none;
+            opacity: 0.3;
+        }
+
+        .container {
+            max-width: 700px;
+            width: 100%;
+            background: #2d4d3d;
+            border: 8px solid #6d5d45;
+            border-radius: 4px;
+            box-shadow: 
+                0 20px 60px rgba(0,0,0,0.6),
+                inset 0 0 100px rgba(0,0,0,0.2);
+            padding: 40px;
+            position: relative;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid rgba(255,255,255,0.1);
+            padding-bottom: 20px;
+            position: relative;
+        }
+
+        .menu-button {
+            position: absolute;
+            right: 0;
+            top: 10px;
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #f4e4c1;
+            cursor: pointer;
+            padding: 10px;
+            transition: transform 0.2s ease;
+        }
+
+        .menu-button:hover {
+            transform: scale(1.1);
+        }
+
+        .difficulty-toggle {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 15px 0;
+        }
+
+        .difficulty-btn {
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-family: 'Special Elite', cursive;
+            background: rgba(255, 255, 255, 0.1);
+            color: #c9b896;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 100px;
+        }
+
+        .difficulty-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .difficulty-btn.active {
+            background: #5a7d5a;
+            color: #fff;
+            border-color: #4a6d4a;
+        }
+
+        /* Toggle Switch */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #4a3a3a;
+            transition: 0.3s;
+            border-radius: 26px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #c9b896;
+            transition: 0.3s;
+            border-radius: 50%;
+        }
+
+        .toggle-switch input:checked + .toggle-slider {
+            background-color: #5a7d5a;
+        }
+
+        .toggle-switch input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+
+        h1 {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 3.5rem;
+            color: #f4e4c1;
+            text-shadow: 
+                2px 2px 0 rgba(0,0,0,0.3),
+                4px 4px 10px rgba(0,0,0,0.5);
+            letter-spacing: 0.1em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            font-family: 'Special Elite', cursive;
+            color: #c9b896;
+            font-size: 0.9rem;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+        }
+
+        .score-display {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 4px;
+            font-size: 1.2rem;
+            color: #f4e4c1;
+        }
+
+        .score-display strong {
+            color: #ffd700;
+            font-size: 1.5rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr) 60px;
+            gap: 8px;
+            margin: 30px 0;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+
+        .word-score {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            font-family: 'Permanent Marker', cursive;
+            color: #f4e4c1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .word-score.visible {
+            opacity: 1;
+        }
+
+        .cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: 'Special Elite', cursive;
+            background: #2a3439;
+            border: 2px solid #4a5a64;
+            border-radius: 4px;
+            color: #f4e4c1;
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+            cursor: default;
+            position: relative;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .cell.clickable {
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .cell.clickable:active {
+            transform: scale(0.95);
+            background: rgba(90, 125, 90, 0.4);
+        }
+
+        .cell.vowel {
+            background: #3a4d3a;
+            border-color: #5a7d5a;
+            color: #a8d5a8;
+        }
+
+        .cell.consonant {
+            background: #4a3a3a;
+            border-color: #7a5a5a;
+            color: #d5a8a8;
+            animation: reveal 0.5s ease;
+        }
+
+        .cell.guessed {
+            background: #4a7a5a;
+            border-color: #5a9a7a;
+            color: #fff;
+            box-shadow: 0 0 20px rgba(90, 154, 122, 0.5);
+            font-weight: 700;
+        }
+
+        .cell.failed {
+            background: #7a3a3a;
+            border-color: #9a4a4a;
+            color: #ffaaaa;
+            box-shadow: 0 0 15px rgba(154, 74, 74, 0.4);
+            font-weight: 700;
+        }
+
+        .word-score.failed {
+            color: #ff6666;
+        }
+
+        .cell.empty {
+            background: #1a2329;
+            border-color: #2a3a44;
+        }
+
+        .cell.selected {
+            background: #4a5a7a;
+            border-color: #6a8aaa;
+            box-shadow: 0 0 20px rgba(106, 138, 170, 0.6);
+            cursor: pointer;
+        }
+
+        .cell.clickable:hover {
+            border-color: #5a7a9a;
+            cursor: pointer;
+        }
+
+        @keyframes reveal {
+            0% {
+                transform: rotateY(90deg);
+                opacity: 0;
+            }
+            100% {
+                transform: rotateY(0);
+                opacity: 1;
+            }
+        }
+
+        .controls {
+            margin: 30px 0;
+        }
+
+        .input-section {
+            margin-bottom: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        input {
+            flex: 1;
+            padding: 15px;
+            font-size: 1.2rem;
+            font-family: 'Special Elite', cursive;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid #5a6a74;
+            border-radius: 4px;
+            color: #f4e4c1;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+        }
+
+        input::placeholder {
+            color: #7a8a94;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #a8d5a8;
+            background: rgba(0,0,0,0.4);
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1rem;
+            font-family: 'Roboto Mono', monospace;
+            font-weight: 700;
+            background: #5a7d5a;
+            color: #fff;
+            border: 2px solid #4a6d4a;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        button:hover {
+            background: #6a8d6a;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(90, 125, 90, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .consonants {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-top: 20px;
+            padding: 20px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+
+        .consonant-btn {
+            padding: 12px;
+            font-size: 1.1rem;
+            font-family: 'Special Elite', cursive;
+            background: #4a3a3a;
+            color: #d5a8a8;
+            border: 2px solid #5a4a4a;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 44px;
+        }
+
+        .consonant-btn:hover:not(:disabled) {
+            background: #5a4a4a;
+            transform: scale(1.1);
+        }
+
+        .consonant-btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+
+        .consonant-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: #2a2a2a;
+        }
+
+        .consonant-btn.used {
+            opacity: 0.4;
+            cursor: not-allowed;
+            background: #2a2a2a;
+            color: #666;
+            border-color: #3a3a3a;
+        }
+
+        .message {
+            text-align: center;
+            margin: 20px 0;
+            padding: 15px;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 700;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .message.show {
+            opacity: 1;
+        }
+
+        .message.success {
+            background: rgba(90, 125, 90, 0.3);
+            color: #a8d5a8;
+        }
+
+        .message.error {
+            background: rgba(125, 90, 90, 0.3);
+            color: #d5a8a8;
+        }
+
+        .game-over {
+            text-align: center;
+            padding: 30px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 4px;
+            margin-top: 30px;
+        }
+
+        .game-over h2 {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 2rem;
+            color: #ffd700;
+            margin-bottom: 20px;
+        }
+
+        .game-over .final-score {
+            font-size: 3rem;
+            color: #f4e4c1;
+            margin: 20px 0;
+            font-weight: 700;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 0.75rem;
+            }
+
+            .menu-button {
+                top: 5px;
+                font-size: 1.5rem;
+            }
+
+            .score-display {
+                font-size: 0.85rem;
+                padding: 10px;
+                margin: 15px 0;
+            }
+
+            .score-display strong {
+                font-size: 1rem;
+            }
+
+            .grid {
+                gap: 4px;
+                padding: 10px;
+                margin: 15px 0;
+            }
+
+            .cell {
+                font-size: 1.2rem;
+            }
+
+            .word-score {
+                font-size: 1rem;
+            }
+
+            .consonants {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 6px;
+                padding: 10px;
+            }
+
+            .consonant-btn {
+                padding: 10px 5px;
+                font-size: 0.9rem;
+            }
+
+            .modal-content {
+                padding: 20px;
+                max-width: 95%;
+            }
+
+            .modal-content h2 {
+                font-size: 1.4rem;
+            }
+
+            .modal-content h3 {
+                font-size: 1.1rem;
+            }
+
+            .modal-content p, .modal-content li {
+                font-size: 0.9rem;
+            }
+
+            .modal-grid {
+                grid-template-columns: repeat(7, 1fr);
+                gap: 8px;
+            }
+
+            .modal-consonant-btn {
+                padding: 12px 8px;
+                font-size: 1rem;
+            }
+
+            .message {
+                font-size: 0.9rem;
+                padding: 10px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .cell {
+                font-size: 1rem;
+            }
+
+            .word-score {
+                font-size: 0.9rem;
+            }
+
+            .consonants {
+                grid-template-columns: repeat(7, 1fr);
+            }
+
+            /* Mobile modal fixes */
+            .modal-content {
+                padding: 12px;
+                width: 94%;
+                max-width: 320px;
+                max-height: 80vh;
+            }
+            
+            .modal-grid {
+                grid-template-columns: repeat(5, 1fr);
+                gap: 5px;
+                margin-bottom: 10px;
+            }
+            
+            .modal-consonant-btn {
+                padding: 8px 4px;
+                font-size: 0.95rem;
+                min-height: 38px;
+            }
+            
+            .modal-title {
+                font-size: 1.1rem;
+                margin-bottom: 8px;
+            }
+            
+            #selected-square-info {
+                padding: 6px 8px;
+                font-size: 0.85rem;
+                margin-bottom: 8px;
+            }
+            
+            /* Hide the keyboard tip on mobile - they don't have keyboards anyway */
+            .keyboard-tip {
+                display: none;
+            }
+            
+            .modal-close {
+                padding: 10px 15px;
+                font-size: 0.85rem;
+                margin-top: 5px;
+            }
+        }
+        
+        /* Even smaller screens */
+        @media (max-width: 350px) {
+            .modal-content {
+                padding: 10px;
+                width: 96%;
+                max-width: 300px;
+            }
+            
+            .modal-grid {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4px;
+            }
+            
+            .modal-consonant-btn {
+                padding: 6px 3px;
+                font-size: 0.85rem;
+                min-height: 34px;
+            }
+            
+            .modal-title {
+                font-size: 1rem;
+            }
+        }
+
+        @media (min-width: 601px) and (max-width: 900px) {
+            /* Tablet styles */
+            .container {
+                padding: 30px;
+                max-width: 600px;
+            }
+
+            .grid {
+                gap: 6px;
+                padding: 15px;
+            }
+
+            .cell {
+                font-size: 1.8rem;
+            }
+
+            .word-score {
+                font-size: 1.3rem;
+            }
+
+            .consonants {
+                grid-template-columns: repeat(7, 1fr);
+            }
+        }
+
+        /* Landscape phone orientation */
+        @media (max-height: 600px) and (orientation: landscape) {
+            .container {
+                padding: 10px;
+            }
+
+            .header {
+                margin-bottom: 10px;
+                padding-bottom: 10px;
+            }
+
+            h1 {
+                font-size: 1.8rem;
+            }
+
+            .score-display {
+                margin: 10px 0;
+                padding: 8px;
+            }
+
+            .grid {
+                margin: 10px 0;
+                padding: 10px;
+            }
+
+            .cell {
+                font-size: 1rem;
+            }
+
+            .modal-content {
+                max-height: 90vh;
+            }
+        }
+
+        /* Modal for consonant selection */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #2d4d3d;
+            border: 4px solid #6d5d45;
+            border-radius: 8px;
+            padding: 25px;
+            max-width: 420px;
+            width: 92%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .modal-content h2 {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 1.8rem;
+            color: #f4e4c1;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-content h3 {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 1.3rem;
+            color: #a8d5a8;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+
+        .modal-content p, .modal-content li {
+            color: #c9b896;
+            line-height: 1.8;
+            margin-bottom: 10px;
+        }
+
+        .modal-content ul {
+            margin-left: 20px;
+            margin-bottom: 15px;
+        }
+
+        .modal-content kbd {
+            background: rgba(0,0,0,0.3);
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-family: monospace;
+            color: #a8d5a8;
+            border: 1px solid rgba(168,213,168,0.3);
+        }
+
+        .modal-title {
+            font-family: 'Permanent Marker', cursive;
+            font-size: 1.5rem;
+            color: #f4e4c1;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .modal-consonant-btn {
+            padding: 15px;
+            font-size: 1.2rem;
+            font-family: 'Special Elite', cursive;
+            background: #4a3a3a;
+            color: #d5a8a8;
+            border: 2px solid #5a4a4a;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            min-height: 48px;
+            touch-action: manipulation;
+            -webkit-touch-callout: none;
+        }
+
+        .modal-consonant-btn:hover:not(:disabled) {
+            background: #5a4a4a;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(90, 74, 74, 0.4);
+        }
+
+        .modal-consonant-btn:active:not(:disabled) {
+            transform: scale(0.95);
+            background: #6a5a5a;
+        }
+
+        .modal-consonant-btn:disabled {
+            opacity: 0.2;
+            cursor: not-allowed;
+            background: #2a2a2a;
+        }
+
+        .modal-consonant-btn.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: #2a2a2a;
+        }
+
+        .modal-close {
+            width: 100%;
+            padding: 12px;
+            font-size: 0.9rem;
+            background: #5a6a74;
+            color: #fff;
+            border: 2px solid #4a5a64;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            background: #6a7a84;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="menu-button" onclick="openMenu()" aria-label="Menu">☰</button>
+            <h1>SLATE</h1>
+            <div class="subtitle">Daily Word Challenge</div>
+        </div>
+
+        <div class="score-display">
+            Score: <strong id="score">0</strong> | 
+            Consonants Used: <strong id="consonants-count">0</strong> | 
+            Words Found: <strong id="words-found">0</strong>/8
+        </div>
+
+        <div class="grid" id="grid"></div>
+
+        <div class="message" id="message"></div>
+
+        <div class="controls">
+            <div class="consonants" id="consonants"></div>
+        </div>
+
+        <div id="game-over" style="display: none;"></div>
+    </div>
+
+    <!-- Consonant Selection Modal -->
+    <div class="modal-overlay" id="consonant-modal">
+        <div class="modal-content">
+            <div class="modal-title">Select a Consonant</div>
+            <div id="selected-square-info" style="background: rgba(90,125,90,0.3); padding: 10px 15px; border-radius: 6px; margin-bottom: 15px; font-size: 1.1rem; color: #a8d5a8;">
+                Filling: <strong id="selected-square-label">Row ? Col ?</strong>
+            </div>
+            <div class="modal-grid" id="modal-consonants"></div>
+            <div class="keyboard-tip" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 0.9rem; color: #c9b896;">
+                ⌨️ <strong>Tip:</strong> Type a letter to select it quickly!
+            </div>
+            <button class="modal-close" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Consonant Confirmation Modal -->
+    <div class="modal-overlay" id="confirm-modal">
+        <div class="modal-content" style="max-width: 350px; text-align: center;">
+            <div class="modal-title">⚠️ Confirm Global Reveal</div>
+            <div style="margin: 20px 0;">
+                <div style="font-size: 4rem; margin: 15px 0;" id="confirm-letter">?</div>
+                <p style="color: #c9b896; font-size: 1.1rem;">Reveal <strong id="confirm-letter-text">?</strong> everywhere?</p>
+                <p style="color: #d5a8a8; font-size: 0.95rem;">This will cost <strong>+1 point</strong></p>
+            </div>
+            <div style="display: flex; gap: 15px; justify-content: center; margin-top: 20px;">
+                <button onclick="confirmConsonantReveal()" style="background: #5a7d5a; padding: 12px 30px;">Yes, Reveal</button>
+                <button onclick="cancelConsonantReveal()" style="background: #7a5a5a; padding: 12px 30px;">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Menu Modal -->
+    <div class="modal-overlay" id="menu-modal">
+        <div class="modal-content">
+            <h2>📋 Menu</h2>
+            
+            <h3>🎯 Difficulty</h3>
+            <div class="difficulty-toggle" id="difficulty-toggle" style="margin-bottom: 20px;">
+                <button class="difficulty-btn active" id="easy-btn" onclick="setDifficulty('easy')">Easy</button>
+                <button class="difficulty-btn" id="hard-btn" onclick="setDifficulty('hard')">Hard</button>
+            </div>
+            <p style="font-size: 0.9rem; color: #a8b896; margin-top: -10px;"><strong>Easy:</strong> Completed words auto-reveal consonants in other words (free!)</p>
+            <p style="font-size: 0.9rem; color: #a8b896;"><strong>Hard:</strong> No free reveals. Every consonant counts.</p>
+            
+            <h3>⚙️ Settings</h3>
+            <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 6px; margin-bottom: 15px;">
+                <div>
+                    <strong style="color: #f4e4c1;">Confirm Global Reveals</strong>
+                    <p style="font-size: 0.85rem; color: #a8b896; margin: 5px 0 0 0;">Ask before revealing consonants (+1 pt)</p>
+                </div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="confirm-toggle" onchange="toggleConfirmation()" checked>
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <h3>How to Play</h3>
+            <p>Your goal is to complete all 8 five-letter words with the lowest score possible.</p>
+            
+            <p><strong>Two ways to fill in letters:</strong></p>
+            <ul>
+                <li><strong>Click a square</strong> → Select a specific consonant for that spot</li>
+                <li><strong>Click a consonant button</strong> → Reveal that letter everywhere in the grid</li>
+            </ul>
+            
+            <p><strong>Scoring:</strong></p>
+            <ul>
+                <li>Each consonant action increases the count by 1</li>
+                <li>When you complete a word, it scores the current consonant count</li>
+                <li>Wrong word guess = +1 penalty</li>
+                <li>Point limit: 50 (game over if exceeded)</li>
+                <li>Lower total score = better!</li>
+            </ul>
+            
+            <h3>⌨️ Keyboard Shortcuts</h3>
+            <ul>
+                <li><kbd>A-Z</kbd> - Type a consonant when a square is selected (modal open)</li>
+                <li><kbd>ESC</kbd> - Close any modal</li>
+            </ul>
+            
+            <h3>About Slate</h3>
+            <p>A daily word puzzle game. New words every day at midnight!</p>
+            <p style="font-size: 0.85rem; color: #a8b896; margin-top: 20px;">v1.2.1 • January 9, 2026</p>
+            
+            <button class="modal-close" onclick="closeMenu()" style="margin-top: 20px;">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // Word database: 2000 five-letter words
+        const WORD_DATABASE = [
+            'ABBEY', 'ABIDE', 'ABORT', 'ABOUT', 'ABOVE', 'ABUSE', 'ACTOR', 'ACUTE', 'ADMIT', 'ADOPT',
+            'ADULT', 'AFTER', 'AGAIN', 'AGENT', 'AGREE', 'AHEAD', 'ALARM', 'ALBUM', 'ALERT', 'ALIEN',
+            'ALIGN', 'ALIKE', 'ALIVE', 'ALLOW', 'ALONE', 'ALONG', 'ALTER', 'ANGEL', 'ANGER', 'ANGLE',
+            'ANGRY', 'APART', 'APPLE', 'APPLY', 'APRIL', 'ARENA', 'ARGUE', 'ARISE', 'ARMED', 'ARMOR',
+            'ARRAY', 'ARROW', 'ASIDE', 'ASSET', 'AVOID', 'AWAKE', 'AWARD', 'AWARE', 'BADLY', 'BAKER',
+            'BANDS', 'BANKS', 'BASED', 'BASES', 'BASIC', 'BASIN', 'BASIS', 'BATCH', 'BEACH', 'BEGAN',
+            'BEGIN', 'BEING', 'BELLY', 'BELOW', 'BENCH', 'BILLY', 'BIRTH', 'BLACK', 'BLADE', 'BLAME',
+            'BLANK', 'BLEND', 'BLESS', 'BLIND', 'BLOCK', 'BLOOD', 'BLOOM', 'BOARD', 'BOOST', 'BOOTH',
+            'BOUND', 'BRAIN', 'BRAND', 'BRASS', 'BRAVE', 'BREAD', 'BREAK', 'BREED', 'BRICK', 'BRIDE',
+            'BRIEF', 'BRING', 'BROAD', 'BROKE', 'BROOK', 'BROWN', 'BRUSH', 'BUILD', 'BUILT', 'BUNCH',
+            'BURNS', 'BURST', 'BUYER', 'CABIN', 'CABLE', 'CALIF', 'CAMEL', 'CANAL', 'CANDY', 'CANON',
+            'CARGO', 'CAROL', 'CARRY', 'CATCH', 'CAUSE', 'CHAIN', 'CHAIR', 'CHAOS', 'CHARM', 'CHART',
+            'CHASE', 'CHEAP', 'CHECK', 'CHEEK', 'CHEST', 'CHIEF', 'CHILD', 'CHINA', 'CHOSE', 'CIVIL',
+            'CLAIM', 'CLASS', 'CLEAN', 'CLEAR', 'CLICK', 'CLIFF', 'CLIMB', 'CLOCK', 'CLONE', 'CLOSE',
+            'CLOTH', 'CLOUD', 'COACH', 'COAST', 'CORAL', 'COUCH', 'COULD', 'COUNT', 'COUPE', 'COURT',
+            'COVER', 'CRACK', 'CRAFT', 'CRASH', 'CRAZY', 'CREAM', 'CREEK', 'CRIME', 'CRISP', 'CROSS',
+            'CROWD', 'CROWN', 'CRUDE', 'CRUSH', 'CURVE', 'CYCLE', 'DAILY', 'DAIRY', 'DANCE', 'DATED',
+            'DEALT', 'DEATH', 'DEBUT', 'DECOR', 'DELAY', 'DELTA', 'DENSE', 'DEPOT', 'DEPTH', 'DERBY',
+            'DEVIL', 'DIARY', 'DISCO', 'DOING', 'DOUBT', 'DOZEN', 'DRAFT', 'DRAIN', 'DRAMA', 'DRANK',
+            'DRAWN', 'DREAM', 'DRESS', 'DRIED', 'DRILL', 'DRINK', 'DRIVE', 'DROVE', 'DROWN', 'DYING',
+            'EAGER', 'EAGLE', 'EARLY', 'EARTH', 'EIGHT', 'ELBOW', 'ELDER', 'ELECT', 'ELITE', 'EMPTY',
+            'ENEMY', 'ENJOY', 'ENTER', 'ENTRY', 'EQUAL', 'ERROR', 'EVENT', 'EVERY', 'EXACT', 'EXIST',
+            'EXTRA', 'FACET', 'FAITH', 'FALSE', 'FANCY', 'FATAL', 'FAULT', 'FEAST', 'FENCE', 'FIBER',
+            'FIELD', 'FIERY', 'FIFTH', 'FIFTY', 'FIGHT', 'FINAL', 'FIRST', 'FIXED', 'FLAME', 'FLASH',
+            'FLEET', 'FLESH', 'FLOAT', 'FLOOD', 'FLOOR', 'FLOUR', 'FLUID', 'FLUSH', 'FOCUS', 'FORCE',
+            'FORTH', 'FORTY', 'FORUM', 'FOUND', 'FRAME', 'FRANK', 'FRAUD', 'FRESH', 'FRIED', 'FRONT',
+            'FROST', 'FRUIT', 'FULLY', 'FUNNY', 'GHOST', 'GIANT', 'GIVEN', 'GLASS', 'GLOBE', 'GLORY',
+            'GLOVE', 'GOING', 'GRACE', 'GRADE', 'GRAIN', 'GRAND', 'GRANT', 'GRAPE', 'GRAPH', 'GRASS',
+            'GRAVE', 'GREAT', 'GREED', 'GREEN', 'GREET', 'GRIEF', 'GRILL', 'GROSS', 'GROUP', 'GROVE',
+            'GROWN', 'GUARD', 'GUESS', 'GUEST', 'GUIDE', 'GUILD', 'GUILT', 'HABIT', 'HAPPY', 'HARSH',
+            'HARRY', 'HEART', 'HEAVY', 'HELLO', 'HENCE', 'HENRY', 'HORSE', 'HOTEL', 'HOUSE', 'HUMAN',
+            'HUMOR', 'IDEAL', 'IMAGE', 'IMPLY', 'INDEX', 'INNER', 'INPUT', 'ISSUE', 'IVORY', 'JAPAN',
+            'JIMMY', 'JOINT', 'JONES', 'JUDGE', 'JUICE', 'KNOWN', 'LABEL', 'LABOR', 'LARGE', 'LASER',
+            'LATER', 'LAUGH', 'LAYER', 'LEARN', 'LEASE', 'LEAST', 'LEAVE', 'LEGAL', 'LEMON', 'LEVEL',
+            'LEWIS', 'LIGHT', 'LIMIT', 'LINEN', 'LINKS', 'LIVER', 'LIVES', 'LOCAL', 'LOGIC', 'LOOSE',
+            'LOWER', 'LOYAL', 'LUCKY', 'LUNCH', 'LYING', 'MAGIC', 'MAJOR', 'MAKER', 'MANOR', 'MAPLE',
+            'MARCH', 'MARIA', 'MARRY', 'MATCH', 'MAYOR', 'MEANT', 'MEDAL', 'MEDIA', 'MELON', 'MERCY',
+            'MERGE', 'MERIT', 'MERRY', 'METAL', 'METER', 'METRO', 'MIGHT', 'MINOR', 'MINUS', 'MIXED',
+            'MODEL', 'MONEY', 'MONTH', 'MORAL', 'MOTOR', 'MOUNT', 'MOUSE', 'MOUTH', 'MOVED', 'MOVIE',
+            'MUSIC', 'NEEDS', 'NERVE', 'NEVER', 'NEWLY', 'NIGHT', 'NINTH', 'NOBLE', 'NOISE', 'NORTH',
+            'NOTED', 'NOVEL', 'NURSE', 'OCCUR', 'OCEAN', 'OFFER', 'OFTEN', 'OLIVE', 'ONION', 'OPERA',
+            'ORBIT', 'ORDER', 'ORGAN', 'OTHER', 'OUGHT', 'OUTER', 'OWNER', 'OXIDE', 'PAINT', 'PANEL',
+            'PANIC', 'PAPER', 'PARKS', 'PARTY', 'PASTA', 'PATCH', 'PAUSE', 'PEACE', 'PEACH', 'PEARL',
+            'PENNY', 'PETER', 'PHASE', 'PHONE', 'PHOTO', 'PIANO', 'PIECE', 'PILOT', 'PINCH', 'PITCH',
+            'PIXEL', 'PIZZA', 'PLACE', 'PLAIN', 'PLANE', 'PLANT', 'PLATE', 'PLAZA', 'PLUMB', 'POINT',
+            'POKER', 'POLAR', 'PORCH', 'POUND', 'POWER', 'PRESS', 'PRICE', 'PRIDE', 'PRIME', 'PRINT',
+            'PRIOR', 'PRISM', 'PRIZE', 'PROOF', 'PROUD', 'PROVE', 'PRUNE', 'PULSE', 'PUPIL', 'PURSE',
+            'QUEEN', 'QUEST', 'QUEUE', 'QUICK', 'QUIET', 'QUITE', 'QUOTE', 'RADAR', 'RADIO', 'RAINY',
+            'RAISE', 'RALLY', 'RANCH', 'RANGE', 'RAPID', 'RATIO', 'RAZOR', 'REACH', 'READY', 'REALM',
+            'REBEL', 'REFER', 'RELAX', 'REPLY', 'RIDGE', 'RIFLE', 'RIGHT', 'RIGID', 'RINSE', 'RISKY',
+            'RIVAL', 'RIVER', 'ROBIN', 'ROCKY', 'RODEO', 'ROMAN', 'ROUGH', 'ROUND', 'ROUTE', 'ROVER',
+            'ROYAL', 'RULER', 'RUMOR', 'RURAL', 'RUSTY', 'SADLY', 'SAFER', 'SAINT', 'SALAD', 'SALON',
+            'SAUCE', 'SCALE', 'SCARE', 'SCARF', 'SCENE', 'SCENT', 'SCOPE', 'SCORE', 'SCOUT', 'SCRAP',
+            'SCREW', 'SEIZE', 'SENSE', 'SERVE', 'SETUP', 'SEVEN', 'SHADE', 'SHAFT', 'SHAKE', 'SHALL',
+            'SHAME', 'SHAPE', 'SHARE', 'SHARP', 'SHAVE', 'SHEEP', 'SHEER', 'SHEET', 'SHELF', 'SHELL',
+            'SHIFT', 'SHINE', 'SHIRT', 'SHOCK', 'SHOOT', 'SHORT', 'SHOWN', 'SIDED', 'SIGHT', 'SINCE',
+            'SIXTH', 'SIXTY', 'SIZED', 'SKILL', 'SLASH', 'SLATE', 'SLAVE', 'SLEEP', 'SLIDE', 'SLOPE',
+            'SMALL', 'SMART', 'SMILE', 'SMITH', 'SMOKE', 'SNAKE', 'SOLID', 'SOLVE', 'SORRY', 'SOUND',
+            'SOUTH', 'SPACE', 'SPARE', 'SPEAK', 'SPEED', 'SPELL', 'SPEND', 'SPENT', 'SPLIT', 'SPOKE',
+            'SPORT', 'SPRAY', 'SQUAD', 'STAFF', 'STAGE', 'STAKE', 'STAND', 'START', 'STATE', 'STEAM',
+            'STEEL', 'STEEP', 'STEER', 'STICK', 'STILL', 'STOCK', 'STONE', 'STOOD', 'STORE', 'STORM',
+            'STORY', 'STRAP', 'STRAW', 'STRIP', 'STUCK', 'STUDY', 'STUFF', 'STYLE', 'SUGAR', 'SUITE',
+            'SUNNY', 'SUPER', 'SURGE', 'SWAMP', 'SWEAR', 'SWEAT', 'SWEEP', 'SWEET', 'SWELL', 'SWEPT',
+            'SWIFT', 'SWINE', 'SWING', 'SWISS', 'SWORD', 'TABLE', 'TAKEN', 'TASTE', 'TAXES', 'TEACH',
+            'TEMPO', 'TERMS', 'TERRA', 'TEXAS', 'THANK', 'THEFT', 'THEIR', 'THEME', 'THERE', 'THESE',
+            'THICK', 'THING', 'THINK', 'THIRD', 'THORN', 'THOSE', 'THREE', 'THREW', 'THROW', 'THUMB',
+            'TIGHT', 'TIMER', 'TIMES', 'TITAN', 'TITLE', 'TOAST', 'TODAY', 'TOKEN', 'TONIC', 'TOPIC',
+            'TOTAL', 'TOUCH', 'TOUGH', 'TOWEL', 'TOWER', 'TOXIC', 'TRACE', 'TRACK', 'TRACT', 'TRADE',
+            'TRAIL', 'TRAIN', 'TRAIT', 'TRAMP', 'TRASH', 'TRAWL', 'TREAD', 'TREAT', 'TREND', 'TRIAL',
+            'TRIBE', 'TRICK', 'TRIED', 'TROOP', 'TROUT', 'TRUCK', 'TRULY', 'TRUMP', 'TRUNK', 'TRUST',
+            'TRUTH', 'TULIP', 'TUMOR', 'TUNIC', 'TWICE', 'TWINS', 'TWIST', 'UDDER', 'ULTRA', 'UNCLE',
+            'UNDER', 'UNDUE', 'UNFED', 'UNION', 'UNITE', 'UNITY', 'UNTIL', 'UPPER', 'UPSET', 'URBAN',
+            'USAGE', 'USUAL', 'VALID', 'VALUE', 'VAPOR', 'VAULT', 'VENUE', 'VERSE', 'VIDEO', 'VIGOR',
+            'VILLA', 'VINYL', 'VIOLA', 'VIPER', 'VIRAL', 'VIRUS', 'VISIT', 'VITAL', 'VIVID', 'VOCAL',
+            'VODKA', 'VOGUE', 'VOICE', 'VOTER', 'WAGES', 'WAGON', 'WAIST', 'WASTE', 'WATCH', 'WATER',
+            'WAVED', 'WAVES', 'WHEAT', 'WHEEL', 'WHERE', 'WHICH', 'WHILE', 'WHITE', 'WHOLE', 'WHOSE',
+            'WIDER', 'WIDOW', 'WIDTH', 'WIELD', 'WOMAN', 'WOMEN', 'WORLD', 'WORRY', 'WORSE', 'WORST',
+            'WORTH', 'WOULD', 'WOUND', 'WOVEN', 'WRIST', 'WRITE', 'WRONG', 'WROTE', 'YACHT', 'YEARN',
+            'YIELD', 'YOUNG', 'YOUTH', 'ZEBRA', 'ZONED'
+        ];
+
+        // Get today's date as a seed for consistent daily words
+        function getDailySeed() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            return parseInt(year + month + day); // e.g., 20260109
+        }
+
+        // Proper seeded random number generator (LCG algorithm)
+        function createSeededRandom(seed) {
+            let state = seed;
+            return function() {
+                state = (state * 1664525 + 1013904223) % 4294967296;
+                return state / 4294967296;
+            };
+        }
+
+        // Select 8 random words for today
+        function getDailyWords() {
+            const seed = getDailySeed();
+            const random = createSeededRandom(seed);
+            const shuffled = [...WORD_DATABASE];
+            
+            // Fisher-Yates shuffle with seeded random
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            
+            // Return first 8 words
+            return shuffled.slice(0, 8);
+        }
+
+        // Word list for today's game
+        const words = getDailyWords();
+
+        console.log('Today\'s words:', words); // Debug: see today's selection
+
+        const vowels = ['A', 'E', 'I', 'O', 'U'];
+        const consonants = ['B', 'C', 'D', 'F', 'G', 'H', 'J', 'K', 'L', 'M', 'N', 'P', 'Q', 'R', 'S', 'T', 'V', 'W', 'X', 'Y', 'Z'];
+
+        let consonantCount = 0;
+        let currentScore = 0;
+        let wordsCompleted = 0;
+        let revealedConsonants = new Set(); // From bottom buttons
+        let completedWordIndices = new Set();
+        let selectedSquare = null;
+        let difficultyMode = localStorage.getItem('slateDifficulty') || 'easy'; // 'easy' or 'hard'
+        let consonantConfirmation = localStorage.getItem('slateConsonantConfirm') !== 'false'; // Default ON
+        let pendingConsonant = null; // For confirmation modal
+        let gameOver = false;
+        const POINT_LIMIT = 50;
+
+        function initGame() {
+            createGrid();
+            createBottomConsonants();
+            createModalConsonants();
+            updateDisplay();
+            updateDifficultyUI();
+            updateConfirmationUI();
+        }
+
+        function setDifficulty(mode) {
+            difficultyMode = mode;
+            localStorage.setItem('slateDifficulty', mode);
+            updateDifficultyUI();
+        }
+
+        function updateDifficultyUI() {
+            const easyBtn = document.getElementById('easy-btn');
+            const hardBtn = document.getElementById('hard-btn');
+            
+            if (difficultyMode === 'easy') {
+                easyBtn.classList.add('active');
+                hardBtn.classList.remove('active');
+            } else {
+                hardBtn.classList.add('active');
+                easyBtn.classList.remove('active');
+            }
+        }
+
+        function toggleConfirmation() {
+            consonantConfirmation = document.getElementById('confirm-toggle').checked;
+            localStorage.setItem('slateConsonantConfirm', consonantConfirmation);
+        }
+
+        function updateConfirmationUI() {
+            const toggle = document.getElementById('confirm-toggle');
+            if (toggle) {
+                toggle.checked = consonantConfirmation;
+            }
+        }
+
+        function showConfirmModal(letter) {
+            pendingConsonant = letter;
+            document.getElementById('confirm-letter').textContent = letter;
+            document.getElementById('confirm-letter-text').textContent = letter;
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+
+        function confirmConsonantReveal() {
+            document.getElementById('confirm-modal').classList.remove('active');
+            if (pendingConsonant) {
+                revealConsonantGlobally(pendingConsonant, true); // true = skip confirmation
+                pendingConsonant = null;
+            }
+        }
+
+        function cancelConsonantReveal() {
+            document.getElementById('confirm-modal').classList.remove('active');
+            pendingConsonant = null;
+        }
+
+        function createGrid() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+
+            words.forEach((word, rowIndex) => {
+                for (let i = 0; i < 5; i++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    cell.dataset.row = rowIndex;
+                    cell.dataset.col = i;
+                    cell.dataset.letter = word[i];
+                    cell.dataset.guessed = 'false'; // Track if manually guessed
+                    
+                    const letter = word[i];
+                    
+                    if (vowels.includes(letter)) {
+                        cell.textContent = letter;
+                        cell.classList.add('vowel');
+                    } else {
+                        cell.classList.add('empty');
+                        cell.classList.add('clickable');
+                        cell.onclick = () => openModalForSquare(cell);
+                    }
+                    
+                    grid.appendChild(cell);
+                }
+                
+                // Add word score cell
+                const scoreCell = document.createElement('div');
+                scoreCell.className = 'word-score';
+                scoreCell.id = `word-score-${rowIndex}`;
+                scoreCell.textContent = '';
+                grid.appendChild(scoreCell);
+            });
+        }
+
+        function createBottomConsonants() {
+            const container = document.getElementById('consonants');
+            container.innerHTML = '';
+            
+            consonants.forEach(letter => {
+                const btn = document.createElement('button');
+                btn.className = 'consonant-btn';
+                btn.textContent = letter;
+                btn.onclick = () => revealConsonantGlobally(letter);
+                btn.id = `bottom-btn-${letter}`;
+                container.appendChild(btn);
+            });
+        }
+
+        function createModalConsonants() {
+            const container = document.getElementById('modal-consonants');
+            container.innerHTML = '';
+            
+            consonants.forEach(letter => {
+                const btn = document.createElement('button');
+                btn.className = 'modal-consonant-btn';
+                btn.textContent = letter;
+                btn.id = `modal-btn-${letter}`;
+                btn.type = 'button'; // Prevent form submission
+                
+                // Simple click handler that works on both touch and mouse
+                btn.onclick = function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!this.disabled) {
+                        fillSquareWithConsonant(letter);
+                    }
+                };
+                
+                container.appendChild(btn);
+            });
+        }
+
+        function openModalForSquare(cell) {
+            console.log('openModalForSquare called for cell:', cell);
+            console.log('Cell classes:', cell.className);
+            
+            // Block if game is over
+            if (gameOver) {
+                console.log('Blocked: game is over');
+                return;
+            }
+            
+            // Only block vowels and completed word cells
+            if (cell.classList.contains('vowel') || cell.classList.contains('guessed')) {
+                console.log('Blocked: vowel or guessed');
+                return;
+            }
+
+            if (completedWordIndices.has(parseInt(cell.dataset.row))) {
+                console.log('Blocked: word already completed');
+                return;
+            }
+            
+            selectedSquare = cell;
+            console.log('Selected square set to:', selectedSquare);
+            
+            // Update the selected square info display
+            const rowNum = parseInt(cell.dataset.row) + 1;
+            const colNum = parseInt(cell.dataset.col) + 1;
+            const label = document.getElementById('selected-square-label');
+            if (label) {
+                label.textContent = `Word ${rowNum}, Letter ${colNum}`;
+            }
+            
+            // Highlight the selected cell
+            cell.classList.add('selected');
+            
+            // Update modal - all available
+            consonants.forEach(letter => {
+                const btn = document.getElementById(`modal-btn-${letter}`);
+                btn.disabled = false;
+            });
+            
+            console.log('Opening modal...');
+            document.getElementById('consonant-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('consonant-modal').classList.remove('active');
+            // Remove selected highlight from any cell
+            if (selectedSquare) {
+                selectedSquare.classList.remove('selected');
+            }
+            selectedSquare = null;
+        }
+
+        function openMenu() {
+            document.getElementById('menu-modal').classList.add('active');
+        }
+
+        function closeMenu() {
+            document.getElementById('menu-modal').classList.remove('active');
+        }
+
+        function fillSquareWithConsonant(letter) {
+            if (!selectedSquare) {
+                console.error('No selected square!');
+                return;
+            }
+            
+            // Save reference BEFORE closing modal (which sets selectedSquare to null)
+            const cellToFill = selectedSquare;
+            const rowIndex = parseInt(cellToFill.dataset.row);
+            const colIndex = parseInt(cellToFill.dataset.col);
+            
+            // Remove selected highlight before closing modal
+            cellToFill.classList.remove('selected');
+            
+            closeModal();
+            
+            // Fill ONLY this specific square (NO consonant count increase - that only happens with global reveal)
+            cellToFill.textContent = letter;
+            cellToFill.classList.remove('empty');
+            cellToFill.classList.add('consonant');
+            cellToFill.dataset.guessed = 'true'; // Mark as manually guessed
+            // Keep onclick so it can be changed
+            cellToFill.onclick = () => openModalForSquare(cellToFill);
+            
+            // Check if word is complete (all 5 letters filled)
+            if (isWordFilled(rowIndex)) {
+                checkWord(rowIndex);
+            }
+        }
+
+        function revealConsonantGlobally(letter, skipConfirmation = false) {
+            if (gameOver) return;
+            
+            if (revealedConsonants.has(letter)) {
+                showMessage('Already revealed!', 'error');
+                return;
+            }
+            
+            // Show confirmation dialog if enabled and not skipping
+            if (consonantConfirmation && !skipConfirmation) {
+                showConfirmModal(letter);
+                return;
+            }
+            
+            console.log(`!!! GLOBAL REVEAL: ${letter} - consonantCount going from ${consonantCount} to ${consonantCount + 1}`);
+            consonantCount++;
+            revealedConsonants.add(letter);
+            
+            // Disable and mark button as used
+            const btn = document.getElementById(`bottom-btn-${letter}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.classList.add('used');
+            }
+            
+            // Also mark modal button
+            const modalBtn = document.getElementById(`modal-btn-${letter}`);
+            if (modalBtn) {
+                modalBtn.disabled = true;
+                modalBtn.classList.add('used');
+            }
+            
+            // Count reveals
+            let revealCount = 0;
+            
+            // Reveal in all incomplete words
+            words.forEach((word, rowIndex) => {
+                if (!completedWordIndices.has(rowIndex)) {
+                    for (let i = 0; i < 5; i++) {
+                        if (word[i] === letter) {
+                            const cell = document.querySelector(`[data-row="${rowIndex}"][data-col="${i}"]`);
+                            if (cell.classList.contains('empty') || cell.classList.contains('consonant')) {
+                                cell.textContent = letter;
+                                cell.classList.remove('empty');
+                                cell.classList.add('consonant');
+                                cell.dataset.guessed = 'false'; // Not manually guessed
+                                revealCount++;
+                            }
+                        }
+                    }
+                }
+            });
+            
+            showMessage(`+1 pts: Revealed ${revealCount} × ${letter}`, 'success');
+            updateDisplay();
+            
+            // Check if any words now complete
+            words.forEach((word, rowIndex) => {
+                if (!completedWordIndices.has(rowIndex) && isWordFilled(rowIndex)) {
+                    setTimeout(() => checkWord(rowIndex), 300);
+                }
+            });
+        }
+
+        function isWordFilled(rowIndex) {
+            for (let i = 0; i < 5; i++) {
+                const cell = document.querySelector(`[data-row="${rowIndex}"][data-col="${i}"]`);
+                if (cell.textContent === '') {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function checkWord(rowIndex) {
+            if (completedWordIndices.has(rowIndex)) return;
+            
+            const word = words[rowIndex];
+            let guessedWord = '';
+            
+            // Build the guessed word
+            for (let i = 0; i < 5; i++) {
+                const cell = document.querySelector(`[data-row="${rowIndex}"][data-col="${i}"]`);
+                guessedWord += cell.textContent;
+            }
+            
+            if (guessedWord === word) {
+                // CORRECT!
+                // Flash green first
+                for (let i = 0; i < 5; i++) {
+                    const cell = document.querySelector(`[data-row="${rowIndex}"][data-col="${i}"]`);
+                    cell.style.background = '#5a7d5a';
+                    cell.style.transform = 'scale(1.1)';
+                }
+                
+                setTimeout(() => {
+                    completeWord(rowIndex);
+                }, 500);
+            } else {
+                // WRONG!
+                consonantCount++; // Penalty
+                
+                // Flash the row red
+                for (let i = 0; i < 5; i++) {
+                    const cell = document.querySelector(`[data-row="${rowIndex}"][data-col="${i}"]`);
+                    cell.style.background = '#7a3a3a';
+                    cell.style.transform = 'scale(1.05)';
+                }
+                
+                setTimeout(() => {
+                    // Clear manually guessed consonants (keep bottom-revealed ones)
+                    for (let i = 0; i < 5; i++) {
+                        const cell = document.querySelector(`[data-row="${rowIndex}"][data-col="${i}"]`);
+                        cell.style.background = '';
+                        cell.style.transform = '';
+                        
+                        if (cell.dataset.guessed === 'true') {
+                            cell.textContent = '';
+                            cell.classList.remove('consonant');
+                            cell.classList.add('empty');
+                            cell.classList.add('clickable');
+                            cell.onclick = () => openModalForSquare(cell);
+                            cell.dataset.guessed = 'false';
+                        }
+                    }
+                }, 800);
+                
+                showMessage(`✗ Wrong word! +1 penalty`, 'error');
+                updateDisplay();
+            }
+        }
+
+        function completeWord(rowIndex) {
+            if (completedWordIndices.has(rowIndex)) return;
+            
+            console.log(`=== COMPLETING WORD ${rowIndex} ===`);
+            console.log(`consonantCount BEFORE scoring: ${consonantCount}`);
+            
+            completedWordIndices.add(rowIndex);
+            wordsCompleted++;
+            
+            // Score this word with current consonant count
+            const wordScore = consonantCount;
+            currentScore += wordScore;
+            
+            console.log(`Word score: ${wordScore}, Total score now: ${currentScore}`);
+            
+            const word = words[rowIndex];
+            
+            // EASY MODE: Auto-reveal consonants from this word in other words (FREE)
+            if (difficultyMode === 'easy') {
+                const wordConsonants = new Set();
+                for (let i = 0; i < 5; i++) {
+                    const letter = word[i];
+                    if (!vowels.includes(letter)) {
+                        wordConsonants.add(letter);
+                    }
+                }
+                
+                // Reveal these consonants in all OTHER incomplete words (no count increase)
+                words.forEach((otherWord, otherRowIndex) => {
+                    if (otherRowIndex === rowIndex || completedWordIndices.has(otherRowIndex)) return;
+                    
+                    for (let i = 0; i < 5; i++) {
+                        const letter = otherWord[i];
+                        if (wordConsonants.has(letter)) {
+                            const cell = document.querySelector(`[data-row="${otherRowIndex}"][data-col="${i}"]`);
+                            if (cell && cell.classList.contains('empty')) {
+                                cell.textContent = letter;
+                                cell.classList.remove('empty', 'clickable');
+                                cell.classList.add('consonant');
+                                cell.onclick = null;
+                                cell.dataset.autoRevealed = 'true'; // Mark as free reveal
+                            }
+                        }
+                    }
+                });
+                
+                // Mark bottom consonant buttons as used (visual feedback)
+                wordConsonants.forEach(letter => {
+                    if (!revealedConsonants.has(letter)) {
+                        revealedConsonants.add(letter);
+                        
+                        // Mark bottom button
+                        const btn = document.getElementById(`bottom-btn-${letter}`);
+                        if (btn) {
+                            btn.classList.add('used');
+                            btn.disabled = true;
+                        }
+                        
+                        // Mark modal button
+                        const modalBtn = document.getElementById(`modal-btn-${letter}`);
+                        if (modalBtn) {
+                            modalBtn.classList.add('used');
+                            modalBtn.disabled = true;
+                        }
+                    }
+                });
+                
+                // Check if any OTHER words are now complete after auto-reveal
+                setTimeout(() => {
+                    words.forEach((otherWord, otherRowIndex) => {
+                        if (otherRowIndex !== rowIndex && !completedWordIndices.has(otherRowIndex) && isWordFilled(otherRowIndex)) {
+                            checkWord(otherRowIndex);
+                        }
+                    });
+                }, 600); // Delay to allow current word animation to complete
+            }
+            
+            // Change entire word to guessed color
+            for (let i = 0; i < 5; i++) {
+                const cell = document.querySelector(`[data-row="${rowIndex}"][data-col="${i}"]`);
+                cell.style.background = ''; // Clear inline styles
+                cell.style.transform = '';
+                cell.classList.remove('vowel', 'consonant', 'empty', 'clickable');
+                cell.classList.add('guessed');
+                cell.onclick = null;
+            }
+            
+            // Show word score
+            const scoreCell = document.getElementById(`word-score-${rowIndex}`);
+            scoreCell.textContent = wordScore;
+            scoreCell.classList.add('visible');
+            
+            const modeText = difficultyMode === 'easy' ? ' (Easy mode: consonants auto-revealed!)' : '';
+            showMessage(`🎯 ${word} complete! +${wordScore} points${modeText}`, 'success');
+            updateDisplay();
+            
+            // Check game end
+            if (wordsCompleted === 8) {
+                setTimeout(() => endGame(true), 500);
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('score').textContent = currentScore;
+            document.getElementById('consonants-count').textContent = consonantCount;
+            document.getElementById('words-found').textContent = wordsCompleted;
+            
+            // Check if point limit reached OR if it's mathematically impossible to win
+            if (!gameOver) {
+                if (currentScore >= POINT_LIMIT) {
+                    checkPointLimit('💀 Point limit reached! Game Over!');
+                } else if (consonantCount > 0) {
+                    // Only check for impossible win if consonants have been used
+                    const wordsRemaining = 8 - wordsCompleted;
+                    const minimumFutureScore = wordsRemaining * consonantCount;
+                    const projectedMinScore = currentScore + minimumFutureScore;
+                    
+                    if (wordsRemaining > 0 && projectedMinScore > POINT_LIMIT) {
+                        checkPointLimit(`💀 Impossible to win! ${wordsRemaining} words × ${consonantCount} pts = ${minimumFutureScore} more points needed`);
+                    }
+                }
+            }
+        }
+        
+        function checkPointLimit(message) {
+            if (gameOver) return;
+            gameOver = true;
+            
+            showMessage(message, 'error');
+            
+            // Reveal all remaining words in red
+            words.forEach((word, rowIndex) => {
+                if (!completedWordIndices.has(rowIndex)) {
+                    // Fill in missing letters
+                    for (let i = 0; i < 5; i++) {
+                        const cell = document.querySelector(`[data-row="${rowIndex}"][data-col="${i}"]`);
+                        const letter = word[i];
+                        
+                        if (cell.textContent === '' || cell.classList.contains('empty')) {
+                            cell.textContent = letter;
+                        }
+                        
+                        // Style all cells in this row as failed (red)
+                        cell.classList.remove('vowel', 'consonant', 'empty', 'clickable');
+                        cell.classList.add('failed');
+                        cell.onclick = null;
+                    }
+                    
+                    // Show X for failed words
+                    const scoreCell = document.getElementById(`word-score-${rowIndex}`);
+                    scoreCell.textContent = '✗';
+                    scoreCell.classList.add('visible', 'failed');
+                }
+            });
+            
+            // Disable all consonant buttons
+            consonants.forEach(letter => {
+                const btn = document.getElementById(`bottom-btn-${letter}`);
+                if (btn) btn.disabled = true;
+                const modalBtn = document.getElementById(`modal-btn-${letter}`);
+                if (modalBtn) modalBtn.disabled = true;
+            });
+            
+            // End game after a short delay
+            setTimeout(() => endGame(false), 1000);
+        }
+
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type} show`;
+            
+            setTimeout(() => {
+                msg.classList.remove('show');
+            }, 2000);
+        }
+
+        function endGame(won = true) {
+            const gameOverEl = document.getElementById('game-over');
+            gameOverEl.style.display = 'block';
+            gameOver = true;
+            
+            let rating, emoji, message, headerText, headerColor;
+            
+            if (!won) {
+                // LOST - hit point limit
+                rating = 'POINTS EXCEEDED';
+                emoji = '💀';
+                message = `You exceeded the ${POINT_LIMIT} point limit! Better luck tomorrow.`;
+                headerText = '❌ POINTS EXCEEDED ❌';
+                headerColor = '#ff6666';
+            } else if (currentScore === 0) {
+                rating = 'PERFECT!';
+                emoji = '🏆';
+                message = 'Impossible! You guessed every word from vowels alone!';
+                headerText = '🎯 GAME COMPLETE! 🎯';
+                headerColor = '#ffd700';
+            } else if (currentScore <= 8) {
+                rating = 'MASTER';
+                emoji = '⭐⭐⭐';
+                message = 'Outstanding performance! You\'re a word wizard!';
+                headerText = '🎯 GAME COMPLETE! 🎯';
+                headerColor = '#ffd700';
+            } else if (currentScore <= 16) {
+                rating = 'EXPERT';
+                emoji = '⭐⭐';
+                message = 'Excellent work! Very impressive solving!';
+                headerText = '🎯 GAME COMPLETE! 🎯';
+                headerColor = '#ffd700';
+            } else if (currentScore <= 24) {
+                rating = 'SKILLED';
+                emoji = '⭐';
+                message = 'Great job! You have strong word skills!';
+                headerText = '🎯 GAME COMPLETE! 🎯';
+                headerColor = '#ffd700';
+            } else if (currentScore <= 32) {
+                rating = 'PROFICIENT';
+                emoji = '✨';
+                message = 'Well done! Solid performance!';
+                headerText = '🎯 GAME COMPLETE! 🎯';
+                headerColor = '#ffd700';
+            } else if (currentScore <= 40) {
+                rating = 'COMPETENT';
+                emoji = '👍';
+                message = 'Good effort! You completed all the words!';
+                headerText = '🎯 GAME COMPLETE! 🎯';
+                headerColor = '#ffd700';
+            } else if (currentScore <= 48) {
+                rating = 'DEVELOPING';
+                emoji = '📚';
+                message = 'Nice work! Keep practicing!';
+                headerText = '🎯 GAME COMPLETE! 🎯';
+                headerColor = '#ffd700';
+            } else {
+                rating = 'COMPLETED';
+                emoji = '✓';
+                message = 'You finished the puzzle just under the limit!';
+                headerText = '🎯 GAME COMPLETE! 🎯';
+                headerColor = '#ffd700';
+            }
+            
+            const modeText = difficultyMode === 'easy' ? 'Easy Mode' : 'Hard Mode';
+            const wordsCompletedText = won ? '8/8' : `${wordsCompleted}/8`;
+            const wordsCompletedColor = won ? '#5a9a7a' : '#ff6666';
+            
+            gameOverEl.innerHTML = `
+                <div class="game-over">
+                    <h2 style="margin-bottom: 10px; color: ${headerColor};">${headerText}</h2>
+                    
+                    <div style="margin: 30px 0;">
+                        <div style="font-size: 3.5rem; margin-bottom: 10px;">${emoji}</div>
+                        <div style="font-size: 2rem; color: ${won ? '#ffd700' : '#ff6666'}; font-family: 'Permanent Marker', cursive; margin-bottom: 15px;">
+                            ${rating}
+                        </div>
+                        <div class="final-score" style="font-size: 4rem; color: ${won ? '#f4e4c1' : '#ff6666'}; margin: 20px 0; font-weight: 700;">
+                            ${currentScore}
+                        </div>
+                        <p style="font-size: 1.1rem; color: #c9b896; line-height: 1.6; max-width: 400px; margin: 0 auto;">
+                            ${message}
+                        </p>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 8px; margin: 30px 0;">
+                        <h3 style="font-family: 'Permanent Marker', cursive; color: #f4e4c1; margin-bottom: 15px;">
+                            Your Performance
+                        </h3>
+                        <div style="color: #a8b896; font-size: 1rem; line-height: 2;">
+                            <div>🎮 Mode: <strong style="color: #d5a8a8;">${modeText}</strong></div>
+                            <div>${won ? '✓' : '✗'} Words Completed: <strong style="color: ${wordsCompletedColor};">${wordsCompletedText}</strong></div>
+                            <div>📊 Total Consonants Used: <strong style="color: #d5a8a8;">${consonantCount}</strong></div>
+                            <div>🎯 Final Score: <strong style="color: ${won ? '#ffd700' : '#ff6666'};">${currentScore}</strong></div>
+                            ${!won ? `<div>⚠️ Point Limit: <strong style="color: #ff6666;">${POINT_LIMIT}</strong></div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <button onclick="shareResults(${won})" style="margin: 20px 0; padding: 15px 40px; font-size: 1.1rem; background: ${won ? '#5a7d5a' : '#7a5a5a'}; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto;">
+                        <span>📤</span> Share Results
+                    </button>
+                    <div id="share-confirmation" style="font-size: 0.9rem; color: #5a9a7a; margin-bottom: 15px; opacity: 0; transition: opacity 0.3s;"></div>
+                    
+                    <div style="background: rgba(90,125,90,0.2); padding: 15px; border-radius: 8px; border: 2px solid rgba(90,125,90,0.4); margin: 20px 0;">
+                        <div style="font-size: 0.9rem; color: #a8d5a8; line-height: 1.8;">
+                            <strong>Score Ranges (Point Limit: ${POINT_LIMIT}):</strong><br>
+                            0 = Perfect | 1-8 = Master | 9-16 = Expert<br>
+                            17-24 = Skilled | 25-32 = Proficient<br>
+                            33-40 = Competent | 41-48 = Developing | 49 = Completed
+                        </div>
+                    </div>
+                    
+                    <div style="font-size: 0.95rem; color: #a8b896; margin-top: 25px; line-height: 1.6;">
+                        ⏰ Come back tomorrow for a new puzzle!
+                    </div>
+                </div>
+            `;
+            
+            // Smooth scroll to results after a short delay
+            setTimeout(() => {
+                gameOverEl.scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 300);
+        }
+        
+        function shareResults(won = true) {
+            // Get today's date for the puzzle number
+            const today = new Date();
+            const launchDate = new Date('2026-01-09');
+            launchDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            const puzzleNumber = Math.floor((today - launchDate) / (1000 * 60 * 60 * 24)) + 1;
+            
+            // Build visual grid representation
+            let gridDisplay = '';
+            words.forEach((word, rowIndex) => {
+                let rowDisplay = '';
+                const isCompleted = completedWordIndices.has(rowIndex);
+                for (let i = 0; i < 5; i++) {
+                    const letter = word[i];
+                    if (!won && !isCompleted) {
+                        // Failed word - show red
+                        rowDisplay += '🟥';
+                    } else if (vowels.includes(letter)) {
+                        rowDisplay += '🟨'; // Yellow for vowels
+                    } else {
+                        rowDisplay += '🟩'; // Green for consonants
+                    }
+                }
+                gridDisplay += rowDisplay + '\n';
+            });
+            
+            const modeEmoji = difficultyMode === 'easy' ? '🟢' : '🔴';
+            const modeLabel = difficultyMode === 'easy' ? 'Easy' : 'Hard';
+            
+            // Get rating
+            let ratingEmoji;
+            if (!won) ratingEmoji = '💀';
+            else if (currentScore === 0) ratingEmoji = '🏆';
+            else if (currentScore <= 8) ratingEmoji = '⭐⭐⭐';
+            else if (currentScore <= 16) ratingEmoji = '⭐⭐';
+            else if (currentScore <= 24) ratingEmoji = '⭐';
+            else if (currentScore <= 32) ratingEmoji = '✨';
+            else if (currentScore <= 40) ratingEmoji = '👍';
+            else if (currentScore <= 48) ratingEmoji = '📚';
+            else ratingEmoji = '✓';
+            
+            const resultText = won ? `🎯 Score: ${currentScore}` : `💀 DNF (${wordsCompleted}/8)`;
+            
+            const shareText = `🪨 Slate #${puzzleNumber} ${modeEmoji} ${modeLabel}
+
+${gridDisplay}
+${resultText} ${ratingEmoji}
+📊 Consonants: ${consonantCount}
+
+https://slate.game`;
+            
+            // Try native share API first (mobile), fallback to clipboard
+            // navigator.share requires HTTPS and is mainly supported on mobile
+            if (navigator.share && navigator.canShare && navigator.canShare({ text: shareText })) {
+                navigator.share({
+                    text: shareText
+                }).then(() => {
+                    showShareConfirmation('✓ Shared successfully!');
+                }).catch(err => {
+                    // User cancelled or share failed - fallback to clipboard
+                    if (err.name !== 'AbortError') {
+                        copyToClipboard(shareText);
+                    }
+                });
+            } else if (navigator.share) {
+                // Try share without canShare check (some browsers)
+                navigator.share({
+                    text: shareText
+                }).then(() => {
+                    showShareConfirmation('✓ Shared successfully!');
+                }).catch(err => {
+                    if (err.name !== 'AbortError') {
+                        copyToClipboard(shareText);
+                    }
+                });
+            } else {
+                copyToClipboard(shareText);
+            }
+        }
+        
+        function copyToClipboard(text) {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showShareConfirmation('✓ Copied to clipboard! Paste to share.');
+                }).catch(() => {
+                    fallbackCopy(text);
+                });
+            } else {
+                fallbackCopy(text);
+            }
+        }
+        
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                showShareConfirmation('✓ Copied to clipboard! Paste to share.');
+            } catch (e) {
+                showShareConfirmation('❌ Could not copy');
+            }
+            document.body.removeChild(textarea);
+        }
+        
+        function showShareConfirmation(message) {
+            const conf = document.getElementById('share-confirmation');
+            if (conf) {
+                conf.textContent = message;
+                conf.style.opacity = '1';
+                setTimeout(() => {
+                    conf.style.opacity = '0';
+                }, 2500);
+            }
+        }
+
+        // Close modal on escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+                closeMenu();
+                cancelConsonantReveal();
+                return;
+            }
+            
+            // Handle Enter key for confirmation modal
+            if (e.key === 'Enter' && document.getElementById('confirm-modal').classList.contains('active')) {
+                e.preventDefault();
+                confirmConsonantReveal();
+                return;
+            }
+            
+            const key = e.key.toUpperCase();
+            
+            // Check if it's a letter A-Z
+            if (key.length === 1 && key >= 'A' && key <= 'Z') {
+                // Prevent default to avoid typing in other inputs
+                e.preventDefault();
+                
+                // Don't process if game is over
+                if (gameOver) return;
+                
+                // Don't process if confirmation modal is open
+                if (document.getElementById('confirm-modal').classList.contains('active')) return;
+                
+                // Check if it's a consonant
+                if (consonants.includes(key)) {
+                    if (selectedSquare || document.getElementById('consonant-modal').classList.contains('active')) {
+                        // Modal is open - fill the selected square (no confirmation needed)
+                        fillSquareWithConsonant(key);
+                    } else {
+                        // No modal open - this is a global reveal via keyboard
+                        // Show confirmation if enabled, otherwise reveal directly
+                        if (consonantConfirmation) {
+                            // Check if already revealed first
+                            if (revealedConsonants.has(key)) {
+                                showMessage('Already revealed!', 'error');
+                            } else {
+                                showConfirmModal(key);
+                            }
+                        } else {
+                            revealConsonantGlobally(key, true);
+                        }
+                    }
+                }
+            }
+        });
+
+        // Close modal on overlay click (only if clicking the overlay itself, not content)
+        document.getElementById('consonant-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'consonant-modal') {
+                e.stopPropagation();
+                closeModal();
+            }
+        });
+
+        document.getElementById('menu-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'menu-modal') {
+                e.stopPropagation();
+                closeMenu();
+            }
+        });
+
+        document.getElementById('confirm-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'confirm-modal') {
+                e.stopPropagation();
+                cancelConsonantReveal();
+            }
+        });
+
+        // Prevent modal content from closing when clicked
+        document.querySelectorAll('.modal-content').forEach(content => {
+            content.addEventListener('click', (e) => {
+                e.stopPropagation();
+            });
+        });
+
+        // Initialize
+        initGame();
+    </script>
+</body>
+</html>
