@@ -602,6 +602,12 @@
             .keyboard-tip {
                 display: none;
             }
+            
+            .clear-letter-btn {
+                padding: 10px;
+                margin-top: 12px;
+                font-size: 0.95rem;
+            }
 
             .message {
                 font-size: 0.9rem;
@@ -717,18 +723,18 @@
                 padding: 12px;
                 width: 88%;
                 max-width: 300px;
-                max-height: 80vh;
+                max-height: 85vh;
             }
             
             #consonant-modal .modal-grid {
                 grid-template-columns: repeat(4, 1fr);
-                gap: 6px;
+                gap: 5px;
             }
             
             .modal-consonant-btn {
-                padding: 10px 6px;
-                font-size: 0.95rem;
-                min-height: 42px;
+                padding: 8px 6px;
+                font-size: 0.9rem;
+                min-height: 38px;
             }
             
             .modal-title {
@@ -737,9 +743,9 @@
             }
             
             #selected-square-info {
-                padding: 6px 8px;
-                font-size: 0.85rem;
-                margin-bottom: 8px;
+                padding: 5px 8px;
+                font-size: 0.8rem;
+                margin-bottom: 6px;
             }
             
             .keyboard-tip {
@@ -750,6 +756,12 @@
                 padding: 10px 15px;
                 font-size: 0.85rem;
                 margin-top: 5px;
+            }
+            
+            .clear-letter-btn {
+                padding: 10px 15px;
+                font-size: 0.9rem;
+                margin-top: 10px;
             }
         }
         
@@ -775,22 +787,28 @@
                 padding: 10px;
                 width: 85%;
                 max-width: 280px;
-                max-height: 75vh;
+                max-height: 88vh;
             }
             
             #consonant-modal .modal-grid {
                 grid-template-columns: repeat(3, 1fr);
-                gap: 5px;
+                gap: 4px;
             }
             
             .modal-consonant-btn {
-                padding: 10px 5px;
-                font-size: 0.9rem;
-                min-height: 40px;
+                padding: 8px 4px;
+                font-size: 0.85rem;
+                min-height: 36px;
             }
             
             .modal-title {
                 font-size: 0.95rem;
+            }
+            
+            .clear-letter-btn {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+                margin-top: 8px;
             }
         }
 
@@ -1094,6 +1112,25 @@
             opacity: 0.3;
             cursor: not-allowed;
             background: #2a2a2a;
+        }
+
+        .clear-letter-btn {
+            width: 100%;
+            padding: 12px;
+            margin-top: 15px;
+            font-size: 1rem;
+            font-family: 'Special Elite', cursive;
+            background: rgba(122, 90, 90, 0.4);
+            color: #d5a8a8;
+            border: 2px solid rgba(122, 90, 90, 0.6);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .clear-letter-btn:hover {
+            background: rgba(122, 90, 90, 0.6);
+            border-color: rgba(122, 90, 90, 0.8);
         }
 
         .modal-close {
@@ -1990,8 +2027,9 @@
                 Filling: <strong id="selected-square-label">Row ? Col ?</strong>
             </div>
             <div class="modal-grid" id="modal-consonants"></div>
+            <button id="clear-letter-btn" class="clear-letter-btn" onclick="clearSelectedSquare()" style="display: none;">ðï¸ Clear Letter</button>
             <div class="keyboard-tip" style="margin-top: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 0.9rem; color: #c9b896;">
-                â¨ï¸ <strong>Tip:</strong> Type a letter to select it quickly!
+                â¨ï¸ <strong>Tip:</strong> Type a letter to select it quickly! Press <strong>Backspace</strong> to clear.
             </div>
             <button class="modal-close" onclick="closeModal()">Cancel</button>
         </div>
@@ -3318,6 +3356,14 @@
                 btn.disabled = false;
             });
             
+            // Show clear button if cell has a guessed letter
+            const clearBtn = document.getElementById('clear-letter-btn');
+            if (cell.dataset.guessed === 'true' && cell.textContent !== '') {
+                clearBtn.style.display = 'block';
+            } else {
+                clearBtn.style.display = 'none';
+            }
+            
             document.getElementById('consonant-modal').classList.add('active');
         }
 
@@ -3327,6 +3373,25 @@
                 selectedSquare.classList.remove('selected');
             }
             selectedSquare = null;
+            // Hide clear button
+            document.getElementById('clear-letter-btn').style.display = 'none';
+        }
+
+        function clearSelectedSquare() {
+            if (!selectedSquare) return;
+            
+            // Only clear if it was a guessed consonant (not auto-revealed)
+            if (selectedSquare.dataset.guessed === 'true') {
+                selectedSquare.textContent = '';
+                selectedSquare.classList.remove('consonant');
+                selectedSquare.classList.add('empty', 'clickable');
+                selectedSquare.dataset.guessed = 'false';
+                
+                playClickSound();
+                showMessage('Letter cleared', 'success');
+            }
+            
+            closeModal();
         }
 
         function openMenu() {
@@ -3601,9 +3666,8 @@
                         const cell = document.querySelector(`[data-row="${rowIndex}"][data-col="${i}"]`);
                         const letter = word[i];
                         
-                        if (cell.textContent === '' || cell.classList.contains('empty')) {
-                            cell.textContent = letter;
-                        }
+                        // Always set the correct letter (overwrites any wrong guesses)
+                        cell.textContent = letter;
                         
                         cell.classList.remove('vowel', 'consonant', 'empty', 'clickable');
                         cell.classList.add('failed');
@@ -4005,6 +4069,15 @@ slate.game`;
                 return;
             }
             
+            // Backspace/Delete to clear letter in modal
+            if ((e.key === 'Backspace' || e.key === 'Delete') && 
+                document.getElementById('consonant-modal').classList.contains('active') &&
+                selectedSquare && selectedSquare.dataset.guessed === 'true') {
+                e.preventDefault();
+                clearSelectedSquare();
+                return;
+            }
+            
             const key = e.key.toUpperCase();
             
             if (key.length === 1 && key >= 'A' && key <= 'Z') {
@@ -4064,7 +4137,7 @@ slate.game`;
             name: 'Slate',
             icon: 'ðª¨',
             url: 'slate.game',
-            version: '1.0.18',
+            version: '1.0.20',
             type: 'daily'
         });
 
