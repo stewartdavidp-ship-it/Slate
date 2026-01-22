@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="1.0.1">
+    <meta name="version" content="1.0.2">
     <title>Slate - Daily Word Challenge</title>
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Permanent+Marker&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -1744,11 +1744,11 @@
         }
         
         function getSyncStatusText() {
-            if (!lastSyncTime) return 'âï¸ Not synced';
+            if (!lastSyncTime) return '&#9729; Not synced';
             const diff = Math.floor((new Date() - lastSyncTime) / 1000);
-            if (diff < 60) return 'âï¸ Just synced';
-            if (diff < 3600) return `âï¸ ${Math.floor(diff / 60)}m ago`;
-            return `âï¸ ${Math.floor(diff / 3600)}h ago`;
+            if (diff < 60) return '&#9729; Just synced';
+            if (diff < 3600) return `&#9729; ${Math.floor(diff / 60)}m ago`;
+            return `&#9729; ${Math.floor(diff / 3600)}h ago`;
         }
         
         function updateSyncIndicator(status) {
@@ -1771,7 +1771,7 @@
                     break;
                 case 'synced':
                     indicator.style.display = 'block';
-                    indicator.textContent = 'âï¸';
+                    indicator.innerHTML = '&#9729;';
                     break;
             }
         }
@@ -1786,8 +1786,8 @@
 <body>
     <div class="container">
         <div class="header">
-            <button class="menu-button" onclick="openMenu()" aria-label="Menu">â°</button>
-            <div class="sync-indicator" id="sync-indicator" onclick="openMenu()" title="Cloud sync status">âï¸</div>
+            <button class="menu-button" onclick="openMenu()" aria-label="Menu">&#9776;</button>
+            <div class="sync-indicator" id="sync-indicator" onclick="openMenu()" title="Cloud sync status">&#9729;</div>
             <h1>SLATE</h1>
             <div class="subtitle">Daily Word Challenge</div>
         </div>
@@ -2059,7 +2059,7 @@
             <h2>ð Menu</h2>
             
             <!-- 0. ACCOUNT -->
-            <h3>âï¸ Account</h3>
+            <h3>&#9729; Account</h3>
             <div id="account-section" class="account-section">
                 <div class="account-signed-out account-disabled">
                     <p style="font-size: 0.85rem; color: #a8b896; margin-bottom: 10px;">Cloud sync & extra features</p>
@@ -2069,7 +2069,7 @@
             </div>
             
             <!-- 1. DIFFICULTY -->
-            <h3>âï¸ Difficulty</h3>
+            <h3>&#9881; Difficulty</h3>
             <div class="difficulty-toggle" id="difficulty-toggle" style="margin-bottom: 15px;">
                 <button class="difficulty-btn active" id="easy-btn" onclick="setDifficulty('easy')">ð¢ Easy</button>
                 <button class="difficulty-btn" id="hard-btn" onclick="setDifficulty('hard')">ð´ Hard</button>
@@ -2107,7 +2107,7 @@
             <button class="action-btn primary" onclick="openPracticeModal()">Browse Past Puzzles</button>
             
             <!-- 5. SETTINGS -->
-            <h3>âï¸ Settings</h3>
+            <h3>&#9881; Settings</h3>
             <div class="setting-row">
                 <div>
                     <span>Confirm Global Reveals</span>
@@ -2152,7 +2152,7 @@
             <!-- 7. GAME INFO -->
             <h3>â¹ï¸ Game Info</h3>
             <p><strong>Puzzle:</strong> <span id="puzzle-date">Daily</span></p>
-            <p><strong>Version:</strong> v1.0.1</p>
+            <p><strong>Version:</strong> v1.0.2</p>
             <p style="font-size: 0.85rem; color: #a8b896; margin-top: 8px;">A daily word puzzle game. New words every day at midnight!</p>
             
             <!-- 8. DATA -->
@@ -2257,10 +2257,10 @@
     </div>
 
     <script>
-        // ============ GAME SHELF INTEGRATION MODULE v1.0.1 ============
+        // ============ GAME SHELF INTEGRATION MODULE v1.0.2 ============
         (function() {
             'use strict';
-            const GAMESHELF_VERSION = '1.0.1';
+            const GAMESHELF_VERSION = '1.0.2';
             if (window.GameShelfIntegration) return;
             
             window.GameShelfIntegration = {
@@ -2276,7 +2276,7 @@
                         name: config.name || gameId,
                         icon: config.icon || 'ð®',
                         url: config.url || window.location.hostname,
-                        version: config.version || '1.0.1',
+                        version: config.version || '1.0.2',
                         type: config.type || 'daily',
                         ...config
                     };
@@ -2827,7 +2827,7 @@
             // Update subtitle to show practice mode
             const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
             document.querySelector('.subtitle').innerHTML =
-                `Daily puzzle â¢ ${dateStr} <span class="practice-badge">Practice</span>`;
+                `Daily puzzle &bull; ${dateStr} <span class="practice-badge">Practice</span>`;
             
             updateUI();
         }
@@ -3110,8 +3110,6 @@
             const result = getTodayResult();
             const stats = getStats();
             
-            if (!result) return;
-            
             const gameOverEl = document.getElementById('game-over');
             gameOverEl.style.display = 'block';
             gameOver = true;
@@ -3122,6 +3120,27 @@
             launchDate.setHours(0, 0, 0, 0);
             today.setHours(0, 0, 0, 0);
             const puzzleNumber = Math.floor((today - launchDate) / (1000 * 60 * 60 * 24)) + 1;
+            
+            // If we don't have result details, show basic "already played" message
+            if (!result) {
+                gameOverEl.innerHTML = `
+                    <div class="game-over">
+                        <h2 style="margin-bottom: 10px; color: #a8d5a8;">&#10004; Already Played Today</h2>
+                        <p style="color: #c9b896; margin-bottom: 20px;">You completed Slate #${puzzleNumber} earlier</p>
+                        <p style="color: #a8b896; font-size: 0.9rem; margin-bottom: 30px;">Come back tomorrow for a new puzzle!</p>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 30px;">
+                            <button onclick="showStats()" class="modal-close" style="background: #5a7d5a;">
+                                &#128202; View Stats
+                            </button>
+                            <button onclick="openDatePicker()" class="modal-close" style="background: #6b5a7d;">
+                                &#128197; Practice Past Puzzles
+                            </button>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
             
             // Get rating info
             let rating, emoji;
@@ -4352,7 +4371,7 @@ slate.game`;
             name: 'Slate',
             icon: 'ðª¨',
             url: 'slate.game',
-            version: '1.0.1',
+            version: '1.0.2',
             type: 'daily'
         });
 
