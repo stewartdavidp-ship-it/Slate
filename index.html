@@ -2,8 +2,9 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="1.0.0">
+    <meta name="version" content="1.0.1">
     <title>Slate - Daily Word Challenge</title>
     <link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Permanent+Marker&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
     <style>
@@ -2151,12 +2152,41 @@
             <!-- 7. GAME INFO -->
             <h3>â¹ï¸ Game Info</h3>
             <p><strong>Puzzle:</strong> <span id="puzzle-date">Daily</span></p>
-            <p><strong>Version:</strong> v1.0.0</p>
+            <p><strong>Version:</strong> v1.0.1</p>
             <p style="font-size: 0.85rem; color: #a8b896; margin-top: 8px;">A daily word puzzle game. New words every day at midnight!</p>
             
             <!-- 8. DATA -->
             <h3>ðï¸ Data</h3>
             <button class="action-btn danger" onclick="resetStatistics()">Reset Statistics</button>
+            
+            <!-- Game Shelf Badge -->
+            <div style="text-align: center; padding: 20px 15px; background: linear-gradient(135deg, rgba(102,126,234,0.15) 0%, rgba(118,75,162,0.15) 100%); border-radius: 12px; margin-top: 20px;">
+                <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px;">
+                    <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="width: 40px; height: 40px;">
+                        <defs>
+                            <linearGradient id="gsBadgeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#667eea"/>
+                                <stop offset="100%" style="stop-color:#764ba2"/>
+                            </linearGradient>
+                        </defs>
+                        <rect x="5" y="5" width="90" height="90" rx="20" fill="url(#gsBadgeGrad)"/>
+                        <g transform="rotate(-12, 35, 50)">
+                            <rect x="15" y="28" width="28" height="36" rx="4" fill="white"/>
+                            <circle cx="43" cy="46" r="6" fill="white"/>
+                            <text x="29" y="54" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#667eea" text-anchor="middle">G</text>
+                        </g>
+                        <g transform="rotate(12, 65, 50)">
+                            <rect x="57" y="28" width="28" height="36" rx="4" fill="rgba(255,255,255,0.9)"/>
+                            <circle cx="57" cy="46" r="6" fill="url(#gsBadgeGrad)"/>
+                            <text x="71" y="54" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="#764ba2" text-anchor="middle">S</text>
+                        </g>
+                    </svg>
+                    <span style="font-size: 1.1rem; font-weight: 600; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">A Game Shelf Original</span>
+                </div>
+                <p style="font-size: 0.85rem; color: #a8b896; margin: 0;">
+                    Track your daily puzzles at <a href="https://gameshelf.club" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 500;">gameshelf.club</a>
+                </p>
+            </div>
             
             <button class="modal-close" onclick="closeMenu()" style="margin-top: 25px;">Close</button>
         </div>
@@ -2227,10 +2257,10 @@
     </div>
 
     <script>
-        // ============ GAME SHELF INTEGRATION MODULE v1.0.0 ============
+        // ============ GAME SHELF INTEGRATION MODULE v1.0.1 ============
         (function() {
             'use strict';
-            const GAMESHELF_VERSION = '1.0.0';
+            const GAMESHELF_VERSION = '1.0.1';
             if (window.GameShelfIntegration) return;
             
             window.GameShelfIntegration = {
@@ -2246,7 +2276,7 @@
                         name: config.name || gameId,
                         icon: config.icon || 'ð®',
                         url: config.url || window.location.hostname,
-                        version: config.version || '1.0.0',
+                        version: config.version || '1.0.1',
                         type: config.type || 'daily',
                         ...config
                     };
@@ -2907,6 +2937,44 @@
             }
         }
 
+        function hasPlayedToday() {
+            const stats = getStats();
+            const today = getTodayString();
+            return stats.lastPlayedDate === today;
+        }
+
+        function getTodayResult() {
+            try {
+                const result = localStorage.getItem('slateTodayResult');
+                if (result) {
+                    const parsed = JSON.parse(result);
+                    // Verify it's from today
+                    if (parsed.date === getTodayString()) {
+                        return parsed;
+                    }
+                }
+            } catch (e) {
+                console.error('Error reading today result:', e);
+            }
+            return null;
+        }
+
+        function saveTodayResult(won, score, wordsCompletedCount, shareText, mode) {
+            try {
+                const result = {
+                    date: getTodayString(),
+                    won: won,
+                    score: score,
+                    wordsCompleted: wordsCompletedCount,
+                    shareText: shareText,
+                    mode: mode
+                };
+                localStorage.setItem('slateTodayResult', JSON.stringify(result));
+            } catch (e) {
+                console.error('Error saving today result:', e);
+            }
+        }
+
         function getRatingFromScore(score) {
             if (score === 0) return 'Perfect';
             if (score <= 8) return 'Master';
@@ -3038,7 +3106,126 @@
             `;
         }
 
+        function showAlreadyPlayed() {
+            const result = getTodayResult();
+            const stats = getStats();
+            
+            if (!result) return;
+            
+            const gameOverEl = document.getElementById('game-over');
+            gameOverEl.style.display = 'block';
+            gameOver = true;
+            
+            // Calculate puzzle number
+            const today = new Date();
+            const launchDate = new Date('2026-01-09');
+            launchDate.setHours(0, 0, 0, 0);
+            today.setHours(0, 0, 0, 0);
+            const puzzleNumber = Math.floor((today - launchDate) / (1000 * 60 * 60 * 24)) + 1;
+            
+            // Get rating info
+            let rating, emoji;
+            if (!result.won) {
+                rating = 'POINTS EXCEEDED';
+                emoji = 'ð';
+            } else if (result.score === 0) {
+                rating = 'PERFECT!';
+                emoji = 'ð';
+            } else if (result.score <= 8) {
+                rating = 'MASTER';
+                emoji = 'â­â­â­';
+            } else if (result.score <= 16) {
+                rating = 'EXPERT';
+                emoji = 'â­â­';
+            } else if (result.score <= 24) {
+                rating = 'SKILLED';
+                emoji = 'â­';
+            } else if (result.score <= 32) {
+                rating = 'PROFICIENT';
+                emoji = 'â¨';
+            } else if (result.score <= 40) {
+                rating = 'COMPETENT';
+                emoji = 'ð';
+            } else if (result.score <= 48) {
+                rating = 'DEVELOPING';
+                emoji = 'ð';
+            } else {
+                rating = 'COMPLETED';
+                emoji = 'â';
+            }
+            
+            const modeText = result.mode === 'easy' ? 'Easy Mode' : 'Hard Mode';
+            const modeEmoji = result.mode === 'easy' ? 'ð¢' : 'ð´';
+            
+            gameOverEl.innerHTML = `
+                <div class="game-over">
+                    <h2 style="margin-bottom: 10px; color: #a8d5a8;">â Already Played</h2>
+                    <p style="color: #c9b896; margin-bottom: 20px;">You completed Slate #${puzzleNumber} today</p>
+                    
+                    <div style="margin: 30px 0;">
+                        <div style="font-size: 3.5rem; margin-bottom: 10px;">${emoji}</div>
+                        <div style="font-size: 2rem; color: ${result.won ? '#ffd700' : '#ff6666'}; font-family: 'Permanent Marker', cursive; margin-bottom: 15px;">
+                            ${rating}
+                        </div>
+                        <div class="final-score" style="font-size: 4rem; color: ${result.won ? '#f4e4c1' : '#ff6666'}; margin: 20px 0; font-weight: 700;">
+                            ${result.score}
+                        </div>
+                    </div>
+                    
+                    <div style="background: rgba(0,0,0,0.3); padding: 20px; border-radius: 8px; margin: 30px 0;">
+                        <h3 style="font-family: 'Permanent Marker', cursive; color: #f4e4c1; margin-bottom: 15px;">
+                            Today's Result
+                        </h3>
+                        <div style="color: #a8b896; font-size: 1rem; line-height: 2;">
+                            <div>${modeEmoji} Mode: <strong style="color: #d5a8a8;">${modeText}</strong></div>
+                            <div>${result.won ? 'â' : 'â'} Words Completed: <strong style="color: ${result.won ? '#5a9a7a' : '#ff6666'};">${result.wordsCompleted}/8</strong></div>
+                            <div>ð¯ Final Score: <strong style="color: ${result.won ? '#ffd700' : '#ff6666'};">${result.score}</strong></div>
+                            ${stats.currentStreak > 1 ? `<div>ð¥ Current Streak: <strong style="color: #ffa500;">${stats.currentStreak}</strong></div>` : ''}
+                        </div>
+                    </div>
+                    
+                    <button onclick="shareFromSaved()" style="margin: 20px 0; padding: 15px 40px; font-size: 1.1rem; background: ${result.won ? '#5a7d5a' : '#7a5a5a'}; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; max-width: 300px; margin-left: auto; margin-right: auto;">
+                        <span>ð¤</span> Share Results
+                    </button>
+                    <div id="share-confirmation" style="font-size: 0.9rem; color: #5a9a7a; margin-bottom: 15px; opacity: 0; transition: opacity 0.3s;"></div>
+                    
+                    <div style="font-size: 0.95rem; color: #a8b896; margin-top: 25px; line-height: 1.6;">
+                        â° Come back tomorrow for a new puzzle!
+                    </div>
+                </div>
+            `;
+        }
+
+        function shareFromSaved() {
+            const result = getTodayResult();
+            if (!result || !result.shareText) {
+                showShareConfirmation('Unable to share - no saved result');
+                return;
+            }
+            
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Slate',
+                    text: result.shareText
+                }).then(() => {
+                    showShareConfirmation('â Shared successfully!');
+                }).catch(err => {
+                    if (err.name !== 'AbortError') {
+                        copyToClipboard(result.shareText);
+                    }
+                });
+            } else {
+                copyToClipboard(result.shareText);
+            }
+        }
+
         function initGame() {
+            // Check if already played today (daily mode only)
+            if (!isPracticeMode && hasPlayedToday()) {
+                showAlreadyPlayed();
+                return;
+            }
+            
             createGrid();
             createBottomConsonants();
             createModalConsonants();
@@ -3723,6 +3910,34 @@
             // Report to Game Shelf
             reportToGameShelf(won, currentScore, stats);
             
+            // Save today's result for "already played" check
+            if (!isPracticeMode) {
+                // Generate share text for later use
+                const puzzleNum = Math.floor((new Date().setHours(0,0,0,0) - new Date('2026-01-09').setHours(0,0,0,0)) / (1000 * 60 * 60 * 24)) + 1;
+                let gridDisplay = '';
+                words.forEach((word, rowIndex) => {
+                    let rowDisplay = '';
+                    const isCompleted = completedWordIndices.has(rowIndex);
+                    for (let i = 0; i < 5; i++) {
+                        const letter = word[i];
+                        if (!won && !isCompleted) rowDisplay += 'ð¥';
+                        else if (vowels.includes(letter)) rowDisplay += 'ð¨';
+                        else rowDisplay += 'ð©';
+                    }
+                    gridDisplay += rowDisplay + '\n';
+                });
+                let ratingEmoji = won ? (currentScore === 0 ? 'ð' : currentScore <= 8 ? 'â­â­â­' : currentScore <= 16 ? 'â­â­' : currentScore <= 24 ? 'â­' : currentScore <= 32 ? 'â¨' : currentScore <= 40 ? 'ð' : currentScore <= 48 ? 'ð' : 'â') : 'ð';
+                let resultEmoji = won ? (currentScore === 0 ? 'ð¯' : 'â') : 'â';
+                const modeEmoji = difficultyMode === 'easy' ? 'ð¢' : 'ð´';
+                const modeLabel = difficultyMode === 'easy' ? 'Easy' : 'Hard';
+                const scoreLine = won ? `Score: ${currentScore} ${ratingEmoji}` : `DNF (${wordsCompleted}/8) ${ratingEmoji}`;
+                let modeLine = `${modeEmoji} ${modeLabel}`;
+                if (stats.currentStreak > 1) modeLine += ` Â· ð¥${stats.currentStreak}`;
+                const shareText = `ðª¨ Slate #${puzzleNum} ${resultEmoji}\n${gridDisplay}${scoreLine}\n${modeLine}\nslate.game`;
+                
+                saveTodayResult(won, currentScore, wordsCompleted, shareText, difficultyMode);
+            }
+            
             let rating, emoji, message, headerText, headerColor;
             
             if (!won) {
@@ -4137,7 +4352,7 @@ slate.game`;
             name: 'Slate',
             icon: 'ðª¨',
             url: 'slate.game',
-            version: '1.0.0',
+            version: '1.0.1',
             type: 'daily'
         });
 
