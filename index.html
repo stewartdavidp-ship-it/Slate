@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="1.0.8">
+    <meta name="version" content="1.0.9">
     <title>Slate - Daily Word Challenge</title>
     
     <!-- PWA Support -->
@@ -2165,7 +2165,7 @@
             <!-- 7. GAME INFO -->
             <h3>ℹ️ Game Info</h3>
             <p><strong>Puzzle:</strong> <span id="puzzle-date">Daily</span></p>
-            <p><strong>Version:</strong> v1.0.8</p>
+            <p><strong>Version:</strong> v1.0.9</p>
             <p style="font-size: 0.85rem; color: #a8b896; margin-top: 8px;">A daily word puzzle game. New words every day at midnight!</p>
             
             <!-- 8. DATA -->
@@ -2270,10 +2270,10 @@
     </div>
 
     <script>
-        // ============ GAME SHELF INTEGRATION MODULE v1.0.8 ============
+        // ============ GAME SHELF INTEGRATION MODULE v1.0.9 ============
         (function() {
             'use strict';
-            const GAMESHELF_VERSION = '1.0.8';
+            const GAMESHELF_VERSION = '1.0.9';
             if (window.GameShelfIntegration) return;
             
             window.GameShelfIntegration = {
@@ -2289,7 +2289,7 @@
                         name: config.name || gameId,
                         icon: config.icon || '🎮',
                         url: config.url || window.location.hostname,
-                        version: config.version || '1.0.8',
+                        version: config.version || '1.0.9',
                         type: config.type || 'daily',
                         ...config
                     };
@@ -2520,6 +2520,123 @@
         }
         let plainMode = localStorage.getItem('slatePlainMode') === 'true';
         let audioContext = null;
+        
+        // v1.0.9: Save/restore in-progress game state to survive page reloads
+        function saveGameState() {
+            if (isPracticeMode || gameOver) return; // Don't save practice or completed games
+            
+            const today = getTodayString();
+            const state = {
+                date: today,
+                consonantCount,
+                currentScore,
+                wordsCompleted,
+                revealedConsonants: Array.from(revealedConsonants),
+                completedWordIndices: Array.from(completedWordIndices),
+                // Save individual cell fills (for per-square guesses)
+                cellFills: []
+            };
+            
+            // Collect cells that have been individually filled (not via global reveal)
+            document.querySelectorAll('.cell[data-guessed="true"]').forEach(cell => {
+                state.cellFills.push({
+                    row: parseInt(cell.dataset.row),
+                    col: parseInt(cell.dataset.col),
+                    letter: cell.textContent
+                });
+            });
+            
+            try {
+                localStorage.setItem('slateGameState', JSON.stringify(state));
+            } catch (e) {
+                console.error('Error saving game state:', e);
+            }
+        }
+        
+        function loadGameState() {
+            try {
+                const saved = localStorage.getItem('slateGameState');
+                if (!saved) return null;
+                
+                const state = JSON.parse(saved);
+                const today = getTodayString();
+                
+                // Only restore if it's from today and game not finished
+                if (state.date === today && !hasPlayedToday()) {
+                    return state;
+                }
+                
+                // Clear stale state
+                localStorage.removeItem('slateGameState');
+                return null;
+            } catch (e) {
+                console.error('Error loading game state:', e);
+                return null;
+            }
+        }
+        
+        function restoreGameState(state) {
+            console.log('🔄 Restoring saved game state');
+            
+            // Restore consonants and scores
+            consonantCount = state.consonantCount || 0;
+            currentScore = state.currentScore || 0;
+            wordsCompleted = state.wordsCompleted || 0;
+            revealedConsonants = new Set(state.revealedConsonants || []);
+            completedWordIndices = new Set(state.completedWordIndices || []);
+            
+            // Restore globally revealed consonants to grid
+            revealedConsonants.forEach(letter => {
+                document.querySelectorAll(`.cell[data-letter="${letter}"]`).forEach(cell => {
+                    if (!cell.classList.contains('vowel') && !completedWordIndices.has(parseInt(cell.dataset.row))) {
+                        cell.textContent = letter;
+                        cell.classList.remove('empty', 'clickable');
+                        cell.classList.add('consonant');
+                        cell.dataset.guessed = 'false';
+                    }
+                });
+                // Disable bottom bar button
+                const btn = document.getElementById(`bottom-btn-${letter}`);
+                if (btn) {
+                    btn.disabled = true;
+                    btn.classList.add('used');
+                }
+                // Disable modal button too
+                const modalBtn = document.getElementById(`modal-btn-${letter}`);
+                if (modalBtn) {
+                    modalBtn.disabled = true;
+                    modalBtn.classList.add('used');
+                }
+            });
+            
+            // Restore individual cell fills
+            (state.cellFills || []).forEach(fill => {
+                const cell = document.querySelector(`.cell[data-row="${fill.row}"][data-col="${fill.col}"]`);
+                if (cell && !cell.classList.contains('vowel') && cell.classList.contains('empty')) {
+                    cell.textContent = fill.letter;
+                    cell.classList.remove('empty', 'clickable');
+                    cell.classList.add('consonant');
+                    cell.dataset.guessed = 'true';
+                    cell.onclick = () => openModalForSquare(cell);
+                }
+            });
+            
+            // Restore completed word styling
+            completedWordIndices.forEach(rowIndex => {
+                document.querySelectorAll(`.cell[data-row="${rowIndex}"]`).forEach(cell => {
+                    cell.style.background = '#5a7d5a';
+                    cell.classList.remove('clickable');
+                    cell.onclick = null;
+                });
+            });
+            
+            // Update display
+            updateDisplay();
+        }
+        
+        function clearGameState() {
+            localStorage.removeItem('slateGameState');
+        }
         
         function getAudioContext() {
             if (!audioContext) {
@@ -3261,6 +3378,13 @@
             createGrid();
             createBottomConsonants();
             createModalConsonants();
+            
+            // v1.0.9: Restore saved game state if available
+            const savedState = loadGameState();
+            if (savedState && !isPracticeMode) {
+                restoreGameState(savedState);
+            }
+            
             updateDisplay();
             updateDifficultyUI();
             updateConfirmationUI();
@@ -3640,6 +3764,8 @@
             cellToFill.dataset.guessed = 'true';
             cellToFill.onclick = () => openModalForSquare(cellToFill);
             
+            saveGameState(); // v1.0.9: Persist progress
+            
             if (isWordFilled(rowIndex)) {
                 checkWord(rowIndex);
             }
@@ -3694,6 +3820,7 @@
             
             showMessage(`+1 pts: Revealed ${revealCount} × ${letter}`, 'success');
             updateDisplay();
+            saveGameState(); // v1.0.9: Persist progress
             
             words.forEach((word, rowIndex) => {
                 if (!completedWordIndices.has(rowIndex) && isWordFilled(rowIndex)) {
@@ -3759,6 +3886,7 @@
                             cell.dataset.guessed = 'false';
                         }
                     }
+                    saveGameState(); // v1.0.9: Save after wrong word clears individual guesses
                 }, 800);
                 
                 showMessage(`✗ Wrong word! +1 penalty`, 'error');
@@ -3850,6 +3978,8 @@
             
             if (wordsCompleted === 8) {
                 setTimeout(() => endGame(true), 500);
+            } else {
+                saveGameState(); // v1.0.9: Save after word completion (unless game is ending)
             }
         }
 
@@ -3923,6 +4053,9 @@
             const gameOverEl = document.getElementById('game-over');
             gameOverEl.style.display = 'block';
             gameOver = true;
+            
+            // v1.0.9: Clear saved game state on completion
+            clearGameState();
             
             // Play win or lose sound
             if (won) {
@@ -4384,7 +4517,7 @@ slate.game`;
             name: 'Slate',
             icon: '🪨',
             url: 'slate.game',
-            version: '1.0.8',
+            version: '1.0.9',
             type: 'daily'
         });
 
