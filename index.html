@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="1.0.7">
+    <meta name="version" content="1.0.8">
     <title>Slate - Daily Word Challenge</title>
     
     <!-- PWA Support -->
@@ -40,6 +40,8 @@
             display: flex;
             justify-content: center;
             align-items: center;
+            /* PWA safe area support */
+            padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
             padding: 20px;
             color: #e8e6e3;
         }
@@ -2163,7 +2165,7 @@
             <!-- 7. GAME INFO -->
             <h3>ℹ️ Game Info</h3>
             <p><strong>Puzzle:</strong> <span id="puzzle-date">Daily</span></p>
-            <p><strong>Version:</strong> v1.0.7</p>
+            <p><strong>Version:</strong> v1.0.8</p>
             <p style="font-size: 0.85rem; color: #a8b896; margin-top: 8px;">A daily word puzzle game. New words every day at midnight!</p>
             
             <!-- 8. DATA -->
@@ -2268,10 +2270,10 @@
     </div>
 
     <script>
-        // ============ GAME SHELF INTEGRATION MODULE v1.0.7 ============
+        // ============ GAME SHELF INTEGRATION MODULE v1.0.8 ============
         (function() {
             'use strict';
-            const GAMESHELF_VERSION = '1.0.7';
+            const GAMESHELF_VERSION = '1.0.8';
             if (window.GameShelfIntegration) return;
             
             window.GameShelfIntegration = {
@@ -2287,7 +2289,7 @@
                         name: config.name || gameId,
                         icon: config.icon || '🎮',
                         url: config.url || window.location.hostname,
-                        version: config.version || '1.0.7',
+                        version: config.version || '1.0.8',
                         type: config.type || 'daily',
                         ...config
                     };
@@ -4382,7 +4384,7 @@ slate.game`;
             name: 'Slate',
             icon: '🪨',
             url: 'slate.game',
-            version: '1.0.7',
+            version: '1.0.8',
             type: 'daily'
         });
 
