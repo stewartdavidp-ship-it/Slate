@@ -2,12 +2,12 @@
     "name": "Slate - Daily Word Challenge",
     "short_name": "Slate",
     "description": "Daily word puzzle on a chalkboard. Find all the hidden words!",
-    "start_url": "/index.html",
+    "start_url": "./index.html",
     "display": "standalone",
     "background_color": "#1a3a2a",
     "theme_color": "#2a4a3a",
     "orientation": "portrait",
-    "scope": "/",
+    "scope": "./",
     "icons": [
         {
             "src": "icons/icon-72.png",

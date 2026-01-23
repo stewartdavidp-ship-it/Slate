@@ -2,13 +2,13 @@
  * Slate PWA Service Worker
  * Version: 1.0.2
  */
-const CACHE_VERSION = 'v1.0.4';
+const CACHE_VERSION = 'v1.0.3';
 const CACHE_NAME = `slate-pwa-${CACHE_VERSION}`;
 
 const CACHE_FILES = [
-    '/',
-    '/index.html',
-    '/manifest.json'
+    './',
+    './index.html',
+    './manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
@@ -64,7 +64,7 @@ self.addEventListener('fetch', (event) => {
                 return response;
             }).catch(() => {
                 if (event.request.mode === 'navigate') {
-                    return caches.match('/index.html');
+                    return caches.match('./index.html');
                 }
                 return new Response('Offline', { status: 503 });
             });
